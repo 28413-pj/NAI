@@ -41,6 +41,7 @@ the fuzzy rules, and decides which discrete action to apply in real time.
    ```bash
    pip install gymnasium[classic-control]
    pip install scikit-fuzzy numpy matplotlib
+   pip install networkx
 """
 
 import gymnasium as gym
