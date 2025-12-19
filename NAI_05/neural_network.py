@@ -30,10 +30,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from tensorflow.keras.utils import to_categorical
 import pandas as pd
-import warnings
 
-warnings.filterwarnings("ignore")
-
+# Definicja stanu losowego dla powtarzalności eksperymentów
 RANDOM_STATE = 42
 tf.random.set_seed(RANDOM_STATE)
 
@@ -44,6 +42,14 @@ SVM_ACC_BC = 0.9766
 # ==========================================================
 # ZBIÓR DANYCH Z POPRZEDNICH ĆWICZEŃ: BREAST CANCER
 # ==========================================================
+"""
+Sekcja 1: Klasyfikacja binarna przy użyciu Sztucznej Sieci Neuronowej (ANN).
+Proces:
+1. Ładowanie zbioru numerycznego Breast Cancer.
+2. Standaryzacja cech (StandardScaler).
+3. Budowa sieci z dwiema warstwami ukrytymi i aktywacją sigmoid na wyjściu.
+4. Trening i porównanie z wynikami algorytmów Drzew Decyzyjnych i SVM.
+"""
 
 print("\n--- ANALIZA BREAST CANCER ---")
 data = load_breast_cancer()
@@ -74,6 +80,14 @@ print(f"  SVM (ML): {SVM_ACC_BC:.4f}")
 # ==========================================================
 # ROZPOZNAWANIE ZWIERZĄT: CIFAR-10
 # ==========================================================
+"""
+Sekcja 2: Klasyfikacja obrazów kolorowych przy użyciu Sieci Konwolucyjnych (CNN).
+Proces:
+1. Normalizacja pikseli do zakresu [0, 1].
+2. Implementacja dwóch architektur (Mała i Duża CNN) w celu zbadania wpływu
+   złożoności modelu na zdolność rozpoznawania 10 klas obiektów.
+3. Generowanie macierzy pomyłek dla lepszego modelu.
+"""
 
 print("\n--- ANALIZA CIFAR-10 (Dwa Rozmiary CNN) ---")
 (X_train, y_train), (X_test, y_test) = cifar10.load_data()
@@ -85,6 +99,7 @@ input_shape = X_train.shape[1:]
 num_classes = 10
 epochs = 5
 
+# Mała architektura
 model_small = Sequential([
     Conv2D(32, (3, 3), activation='relu', input_shape=input_shape),
     MaxPooling2D((2, 2)),
@@ -97,6 +112,7 @@ model_small.compile(optimizer='adam', loss='categorical_crossentropy', metrics=[
 model_small.fit(X_train, y_train_oh, epochs=epochs, verbose=0)
 _, acc_small = model_small.evaluate(X_test, y_test_oh, verbose=0)
 
+# Duża architektura
 model_large = Sequential([
     Conv2D(64, (3, 3), activation='relu', input_shape=input_shape),
     Conv2D(64, (3, 3), activation='relu'),
@@ -127,7 +143,12 @@ plt.show()
 # ==========================================================
 # ROZPOZNAWANIE UBRAŃ: FASHION-MNIST
 # ==========================================================
-
+"""
+Sekcja 3: Klasyfikacja obrazów w skali szarości przy użyciu CNN.
+Proces:
+1. Rozszerzenie wymiarów danych o kanał koloru (wymagane dla warstw Conv2D).
+2. Nauka rozpoznawania 10 typów garderoby.
+"""
 print("\n--- ANALIZA FASHION-MNIST ---")
 (X_train, y_train), (X_test, y_test) = fashion_mnist.load_data()
 X_train = np.expand_dims(X_train.astype('float32') / 255.0, -1)
@@ -148,21 +169,33 @@ _, acc_fashion = model_fashion.evaluate(X_test, to_categorical(y_test), verbose=
 print(f"Dokładność Fashion-MNIST: {acc_fashion:.4f}")
 
 # ==========================================================
-# WŁASNY ZBIÓR: HEART DISEASE (PREDYKCJA MEDYCZNA)
+# WŁASNY ZBIÓR: HEART DISEASE
 # ==========================================================
+"""
+Sekcja 4: Klasyfikacja binarna ryzyka chorób serca (ANN).
+Proces:
+1. Wczytanie zewnętrznego zbioru danych medycznych.
+2. Przypisanie jawnych nazw kolumn i czyszczenie danych (usuwanie '?', konwersja typów).
+3. One-Hot Encoding cech kategorycznych (np. sex, cp, slope).
+4. Budowa sieci z warstwą Dropout w celu zapobiegania przetrenowaniu.
+"""
 
 print("\n--- ANALIZA HEART DISEASE ---")
 URL_HEART = "https://raw.githubusercontent.com/dataprofessor/data/master/heart-disease-cleveland.csv"
 
+# Definicja nazw kolumn podanych przez użytkownika
 columns = ['age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg', 'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal', 'target']
 df_heart = pd.read_csv(URL_HEART, names=columns, header=0)
 
+# Czyszczenie i przygotowanie danych
 df_heart = df_heart.replace('?', np.nan).dropna().apply(pd.to_numeric)
 cat_cols = ['sex', 'cp', 'restecg', 'exang', 'slope', 'ca', 'thal']
 df_encoded = pd.get_dummies(df_heart, columns=cat_cols)
 
+# Separacja cech (X) i etykiety docelowej (y)
 X_h = df_encoded.drop('target', axis=1).values
 y_h = df_encoded['target'].values
+# Konwersja targetu na binarny (0 = zdrowy, >0 = chory)
 y_h = (y_h > 0).astype(int)
 
 X_train_h, X_test_h, y_train_h, y_test_h = train_test_split(
@@ -186,6 +219,7 @@ _, acc_heart = model_heart.evaluate(X_test_h_s, y_test_h, verbose=0)
 
 print(f"Dokładność Heart Disease: {acc_heart:.4f}")
 
+# --- POKAZOWE ROZPOZNAWANIE ---
 print("\n--- PRZYKŁAD ROZPOZNAWANIA (Heart Disease) ---")
 sample_idx = 0
 sample_data = X_test_h_s[sample_idx:sample_idx+1]
